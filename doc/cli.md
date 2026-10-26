@@ -1230,3 +1230,25 @@ List all tokens with state and provenance. The current clone's token is marked w
 fr actor list
 fr actor list --json
 ```
+
+## Themes
+
+### `fr theme list`
+
+List built-in and discovered theme files.
+
+```
+fr theme list
+fr theme list --json
+```
+
+The active theme is marked with `*`. A theme file in `frame/themes/` shadows a built-in of the same name, and the project file shadows the global one.
+
+### `fr theme import base16 FILE [--name NAME] [--global] [--force] [--dry-run] [--json]`
+
+Import a base16 scheme (JSON or YAML) as a frame theme file. The file is written to `frame/themes/<name>.toml` by default, or to `~/.config/frame/themes/<name>.toml` with `--global`. `--name` overrides the scheme name; otherwise the scheme name, or the file stem, is used. `--force` overwrites an existing file.
+
+```
+fr theme import base16 scheme.json
+fr theme import base16 scheme.yaml --name ocean --global --dry-run
+```

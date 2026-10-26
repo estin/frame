@@ -10499,3 +10499,119 @@ fn track_rename_prefix_honors_project_dir() {
         "the rename rewrote the caller's project"
     );
 }
+
+// ---------------------------------------------------------------------------
+// Theme files and import
+// ---------------------------------------------------------------------------
+
+const BASE16_OCEAN: &str = r##"{
+  "system": "base16",
+  "name": "Ocean",
+  "author": "Test",
+  "variant": "dark",
+  "palette": {
+    "base00": "#2b303b", "base01": "#343d46", "base02": "#4f5b66",
+    "base03": "#65737e", "base04": "#a7adba", "base05": "#c0c5ce",
+    "base06": "#dfe1e8", "base07": "#eff1f5", "base08": "#bf616a",
+    "base09": "#d08770", "base0A": "#ebcb8b", "base0B": "#a3be8c",
+    "base0C": "#96b5b4", "base0D": "#8fa1b3", "base0E": "#b48ead",
+    "base0F": "#ab7967"
+  }
+}"##;
+
+#[test]
+fn theme_import_writes_a_project_theme_and_list_shows_it() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    create_test_project(tmp.path());
+    let scheme = tmp.path().join("ocean.json");
+    fs::write(&scheme, BASE16_OCEAN).unwrap();
+
+    let out = run_fr_ok(
+        tmp.path(),
+        &["theme", "import", "base16", scheme.to_str().unwrap()],
+    );
+    assert!(out.contains("Wrote"), "{out}");
+    assert!(out.contains("theme = \"ocean\""), "{out}");
+
+    let theme = fs::read_to_string(tmp.path().join("frame/themes/ocean.toml")).unwrap();
+    assert!(theme.contains("background = \"#2B303B\""), "{theme}");
+    assert!(theme.contains("[tags]"), "{theme}");
+
+    let list = run_fr_ok(tmp.path(), &["theme", "list"]);
+    assert!(list.contains("ocean"), "{list}");
+    assert!(list.contains("project"), "{list}");
+}
+
+#[test]
+fn theme_import_refuses_to_overwrite_without_force() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    create_test_project(tmp.path());
+    let scheme = tmp.path().join("ocean.json");
+    fs::write(&scheme, BASE16_OCEAN).unwrap();
+
+    run_fr_ok(
+        tmp.path(),
+        &["theme", "import", "base16", scheme.to_str().unwrap()],
+    );
+    let (out, err, ok) = run_fr(
+        tmp.path(),
+        &["theme", "import", "base16", scheme.to_str().unwrap()],
+    );
+    assert!(!ok, "overwrite without --force should fail:\n{out}\n{err}");
+    assert!(err.contains("already exists"), "{err}");
+
+    let out = run_fr_ok(
+        tmp.path(),
+        &[
+            "theme",
+            "import",
+            "base16",
+            scheme.to_str().unwrap(),
+            "--force",
+        ],
+    );
+    assert!(out.contains("Wrote"), "{out}");
+}
+
+#[test]
+fn theme_import_dry_run_writes_nothing() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    create_test_project(tmp.path());
+    let scheme = tmp.path().join("ocean.json");
+    fs::write(&scheme, BASE16_OCEAN).unwrap();
+
+    let out = run_fr_ok(
+        tmp.path(),
+        &[
+            "theme",
+            "import",
+            "base16",
+            scheme.to_str().unwrap(),
+            "--dry-run",
+        ],
+    );
+    assert!(out.contains("Would write"), "{out}");
+    assert!(!tmp.path().join("frame/themes/ocean.toml").exists());
+}
+
+#[test]
+fn theme_list_marks_the_active_theme() {
+    let tmp = tempfile::TempDir::new().unwrap();
+    create_test_project(tmp.path());
+    let scheme = tmp.path().join("ocean.json");
+    fs::write(&scheme, BASE16_OCEAN).unwrap();
+    run_fr_ok(
+        tmp.path(),
+        &["theme", "import", "base16", scheme.to_str().unwrap()],
+    );
+
+    let toml = fs::read_to_string(tmp.path().join("frame/project.toml")).unwrap();
+    fs::write(
+        tmp.path().join("frame/project.toml"),
+        format!("{toml}\n[ui]\ntheme = \"ocean\"\n"),
+    )
+    .unwrap();
+
+    let list = run_fr_ok(tmp.path(), &["theme", "list"]);
+    assert!(list.contains("* ocean"), "{list}");
+}

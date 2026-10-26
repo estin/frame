@@ -523,6 +523,11 @@ impl<'de> Deserialize<'de> for ByteSize {
 pub struct UiConfig {
     #[serde(default)]
     pub show_key_hints: bool,
+    /// Name of a named color theme (see `tui::theme`). `None` or an unknown
+    /// name falls back to the built-in default theme. `[ui.colors]` overrides
+    /// still apply on top of the chosen theme.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub theme: Option<String>,
     #[serde(default)]
     pub colors: IndexMap<String, String>,
     #[serde(default)]
@@ -588,6 +593,7 @@ mod tests {
     fn ui_config_default() {
         let u = UiConfig::default();
         assert!(!u.show_key_hints);
+        assert!(u.theme.is_none());
         assert!(u.colors.is_empty());
         assert!(u.tag_colors.is_empty());
         assert!(u.ref_extensions.is_empty());
@@ -597,6 +603,18 @@ mod tests {
         assert!(u.editor_hints.is_none());
         // note_wrap default via Default trait is false (bool default)
         assert!(!u.note_wrap);
+    }
+
+    #[test]
+    fn ui_config_serde_theme_name() {
+        let u: UiConfig = serde_json::from_str(r#"{"theme": "light"}"#).unwrap();
+        assert_eq!(u.theme.as_deref(), Some("light"));
+    }
+
+    #[test]
+    fn ui_config_serde_theme_absent() {
+        let u: UiConfig = serde_json::from_str("{}").unwrap();
+        assert!(u.theme.is_none());
     }
 
     #[test]

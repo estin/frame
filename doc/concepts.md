@@ -369,6 +369,7 @@ ref_extensions = ["md"]    # file extensions for ref/spec autocomplete (empty = 
 ref_paths = ["doc", "spec", "docs", "design", "papers"]  # directories for ref/spec autocomplete (empty = whole project)
 default_tags = ["cc"]      # tags always shown in autocomplete (even if no tasks use them yet)
 editor_hints = true        # hint comments in the external editor (E) template (default: true)
+theme = "default"          # named color theme (e.g. default, light); unset = default
 
 [ui.tag_colors]
 bug = "#FF4444"
@@ -377,3 +378,7 @@ design = "#44DDFF"
 [ui.colors]
 # custom state/UI color overrides (hex values)
 ```
+
+A named color theme sets the full palette. Frame ships with `default` (dark) and `light`. You pick a theme with the `theme` key. Leave the key out to use `default`. You can override single colors after a theme pick with `[ui.colors]`.
+
+A theme can also come from a theme file in `frame/themes/<name>.toml` or `~/.config/frame/themes/<name>.toml`. The file holds `[colors]` and `[tags]` tables with the same keys, and an optional `extends` key that starts from a built-in or another theme file. The project file wins over the global one, and `[ui.colors]` still applies on top.

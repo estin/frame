@@ -4,6 +4,8 @@ mod merge;
 pub use merge::{cmd_merge, cmd_merge_resolve};
 mod git;
 pub use git::cmd_git;
+mod theme;
+pub use theme::cmd_theme;
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -139,6 +141,8 @@ fn dispatch_command(
 
             // Recovery
             Commands::Recovery(args) => cmd_recovery(args, json),
+            // Themes
+            Commands::Theme(args) => cmd_theme(args, json),
         },
     }
 }
@@ -3304,7 +3308,8 @@ fn cmd_edit(args: EditArgs, json: bool) -> Result<(), Box<dyn std::error::Error>
         .ok_or_else(|| task_not_found(&project.frame_dir, &args.id))?;
     let hints = project.config.ui.editor_hints.unwrap_or(true);
     let tags = if hints {
-        let theme = crate::tui::theme::Theme::from_config(&project.config.ui);
+        let dirs = crate::tui::theme::ThemeDirs::for_project(&project.frame_dir);
+        let theme = crate::tui::theme::Theme::load(&project.config.ui, &dirs);
         crate::tui::app::all_tags(&project, &theme)
     } else {
         Vec::new()

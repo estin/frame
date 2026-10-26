@@ -37,10 +37,14 @@ pub struct ProjectRegistry {
 
 /// Get the registry file path, respecting XDG_CONFIG_HOME
 pub fn registry_path() -> PathBuf {
-    let config_dir = std::env::var("XDG_CONFIG_HOME")
+    config_dir().join("frame").join("projects.toml")
+}
+
+/// The user's configuration directory, respecting `XDG_CONFIG_HOME`.
+pub fn config_dir() -> PathBuf {
+    std::env::var("XDG_CONFIG_HOME")
         .map(PathBuf::from)
-        .unwrap_or_else(|_| dirs_home().join(".config"));
-    config_dir.join("frame").join("projects.toml")
+        .unwrap_or_else(|_| dirs_home().join(".config"))
 }
 
 /// Get the user's home directory

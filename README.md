@@ -76,10 +76,31 @@ my-project/
       compiler-infra.md
     archive/
       effects.md          # Done tasks, auto-archived
+    themes/
+      ocean.toml          # Optional named theme files
 ```
 
 See [`project.toml`](src/templates/project.toml) for the full configuration
 reference — the template is self-documenting.
+
+## Themes
+
+Frame ships with `default` (dark) and `light` palettes. Set `[ui] theme = "light"`
+in `project.toml` to switch. You can also create a theme file in
+`frame/themes/<name>.toml` (or `~/.config/frame/themes/<name>.toml` for all
+projects) with `[colors]` and `[tags]` tables, plus an optional `extends`
+key that starts from a built-in or another theme file.
+
+To import a palette from the base16 collection, run
+`fr theme import base16 scheme.yaml`. The importer accepts JSON or YAML.
+
+Browse palettes at the tinted gallery:
+https://tinted-theming.github.io/tinted-gallery/
+
+The scheme files live in the tinted-theming schemes repository:
+https://github.com/tinted-theming/schemes/tree/spec-0.11/base16
+
+`[ui.colors]` still overrides single colors on top of any theme.
 
 ## TUI
 

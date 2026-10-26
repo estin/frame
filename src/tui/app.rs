@@ -25,7 +25,7 @@ use crate::parse::{parse_inbox, parse_track};
 
 use super::input;
 use super::render;
-use super::theme::Theme;
+use super::theme::{Theme, ThemeDirs};
 use super::undo::{Operation, UndoStack};
 
 /// Which view is currently displayed
@@ -1590,7 +1590,10 @@ impl App {
             .map(|t| t.id.clone())
             .collect();
 
-        let theme = Theme::from_config(&project.config.ui);
+        let theme = Theme::load(
+            &project.config.ui,
+            &ThemeDirs::for_project(&project.frame_dir),
+        );
         let note_wrap = project.config.ui.note_wrap;
 
         // Read-only: surface which clone we're on; never claims a token.
@@ -3701,7 +3704,10 @@ impl App {
     fn adopt_config(&mut self, config: crate::model::ProjectConfig) {
         let current = self.current_track_id().map(|s| s.to_string());
         self.project.config = config;
-        self.theme = Theme::from_config(&self.project.config.ui);
+        self.theme = Theme::load(
+            &self.project.config.ui,
+            &ThemeDirs::for_project(&self.project.frame_dir),
+        );
 
         let live: Vec<(String, String)> = self
             .project

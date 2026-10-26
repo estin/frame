@@ -117,6 +117,7 @@ track_warn_bytes = "512KB"   # `fr check` warns past this much OPEN work in one
 kitty_keyboard = true        # enhanced keyboard protocol (set false if your terminal has issues)
 note_wrap = true             # soft word wrap in note editor
 board_done_days = 7          # days of done tasks to show in board view (0 = hide Done column)
+theme = "default"            # named color theme (e.g. default, light); unset = default
 default_tags = ["cc"]        # tags always shown in autocomplete
 # ref_extensions = ["md"]    # file extensions for ref/spec autocomplete (empty = all)
 ref_paths = ["doc", "spec", "docs", "design", "papers"]  # directories for ref/spec autocomplete (empty = whole project)

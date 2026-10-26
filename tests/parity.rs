@@ -899,6 +899,7 @@ const CLASSIFICATION: &[(&str, Class)] = &[
     ("clean", Class::Write),
     ("import", Class::Write),
     ("delete", Class::Write),
+    ("theme", Class::Write),
 ];
 
 fn class_of(name: &str) -> Option<Class> {
@@ -1565,6 +1566,8 @@ const JSON_SURFACE: &[JsonRow] = &[
     },
     jrow(&["projects", "prune"], Json::Yes),
     jrow(&["actor", "list"], Json::Yes),
+    jrow(&["theme", "list"], Json::Yes),
+    jrow(&["theme", "import", "base16", "theme.json"], Json::Yes),
     jrow(&["actor", "claim"], Json::Yes),
     jrow(&["actor", "set", "c"], Json::Yes),
     JsonRow {
@@ -1685,6 +1688,11 @@ fn json_surfaces_are_what_the_table_says() {
         if r.argv != ["init"] {
             create_fixture(root);
             fs::write(root.join("import.md"), "- [ ] an imported task\n").unwrap();
+            fs::write(
+                root.join("theme.json"),
+                r##"{"name":"t","base00":"#111111","base01":"#222222","base02":"#333333","base03":"#444444","base04":"#555555","base05":"#666666","base06":"#777777","base07":"#888888","base08":"#999999","base09":"#aaaaaa","base0A":"#bbbbbb","base0B":"#cccccc","base0C":"#dddddd","base0D":"#eeeeee","base0E":"#ffffff","base0F":"#000000"}"##,
+            )
+            .unwrap();
             // Three sides for the merge driver row: both edited `M-001`
             // differently, so the merge conflicts and has something to report.
             let shell = |task: &str| format!("# Main Track\n\n## Backlog\n\n{task}\n## Done\n");
@@ -1860,6 +1868,8 @@ const DRY_RUN_SURFACE: &[DryRunRow] = &[
     drow(&["recovery", "path"], DryRun::No("a read")),
     drow(&["projects", "list"], DryRun::No("a read")),
     drow(&["actor", "list"], DryRun::No("a read")),
+    drow(&["theme", "list"], DryRun::No("a read")),
+    drow(&["theme", "import", "base16", "theme.json"], DryRun::Yes),
     // Writes.
     drow(&["inbox", "a new item"], DryRun::Yes),
     drow(&["add", "main", "x"], DryRun::Yes),
@@ -2061,6 +2071,11 @@ fn dry_run_writes_nothing() {
             if row.argv != ["init"] {
                 create_fixture(&root);
                 fs::write(root.join("import.md"), "- [ ] an imported task\n").unwrap();
+                fs::write(
+                    root.join("theme.json"),
+                    r##"{"name":"t","base00":"#111111","base01":"#222222","base02":"#333333","base03":"#444444","base04":"#555555","base05":"#666666","base06":"#777777","base07":"#888888","base08":"#999999","base09":"#aaaaaa","base0A":"#bbbbbb","base0B":"#cccccc","base0C":"#dddddd","base0D":"#eeeeee","base0E":"#ffffff","base0F":"#000000"}"##,
+                )
+                .unwrap();
             }
             for pre in row.setup {
                 run_fr_status(&root, pre);

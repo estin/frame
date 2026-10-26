@@ -754,6 +754,7 @@ UI-relevant settings in `project.toml`:
 kitty_keyboard = true      # enhanced keyboard protocol (disable if terminal has issues)
 note_wrap = true           # soft word wrap for note editing (toggle with w / Alt+w)
 board_done_days = 7        # days of done tasks to show on board (0 = hide done column)
+theme = "default"          # named color theme (e.g. "default", "light"); unset = default
 ref_extensions = ["md"]    # file types for ref/spec autocomplete
 ref_paths = ["doc"]        # directories for ref/spec autocomplete
 editor_hints = true        # hint comments in the external editor (E) template
@@ -765,5 +766,9 @@ design = "#44DDFF"
 [ui.colors]
 # state/UI color overrides
 ```
+
+A project picks a named theme with `theme = "light"` in the `[ui]` section. Frame ships with `default` (dark) and `light`. An unset or unknown theme name falls back to `default`. You can still override single colors with `[ui.colors]` and set tag colors with `[ui.tag_colors]`.
+
+A named theme can also come from a theme file. Frame looks in `frame/themes/<name>.toml` and in `~/.config/frame/themes/<name>.toml`, and the project file wins over the global one. The file holds `[colors]` and `[tags]` tables with the same keys, plus an optional `extends` key that starts from a built-in or another theme file. `fr theme import base16` writes such a file from a base16 JSON scheme.
 
 The TUI persists cursor positions, scroll offsets, expanded task state, and note wrap preference in `frame/.state.json` (auto-saved, not meant for manual editing).

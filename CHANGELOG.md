@@ -15,6 +15,10 @@ All notable changes to frame will be documented in this file.
 
 ### Added
 
+- **Named color themes.** `[ui] theme = "light"` in `project.toml` picks a built-in palette. Frame ships with `default` (the existing dark palette) and `light`. An unset or unknown name falls back to `default`, and `[ui.colors]` overrides still apply on top of the chosen theme.
+
+- **Theme files and base16 import.** `[ui] theme = "ocean"` resolves to `frame/themes/ocean.toml` or `~/.config/frame/themes/ocean.toml`. The file holds `[colors]` and `[tags]` tables with the same keys as `[ui.colors]`, and an optional `extends` key that starts from a built-in or another theme file. The project file wins over the global one, and `[ui.colors]` still overrides on top. `fr theme list` shows where each theme comes from, and `fr theme import base16 scheme.json` converts a base16 scheme (JSON or YAML) into a theme file.
+
 - **`fr clean` names the files it changed.** It closes with the list and says what it is:
 
   ```

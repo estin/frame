@@ -89,6 +89,8 @@ pub enum Commands {
     Actor(ActorCmd),
     /// View or manage the recovery log
     Recovery(RecoveryCmd),
+    /// List theme files, or import a theme from another collection
+    Theme(ThemeCmd),
     /// Three-way merge two versions of a track or the inbox (see also: `fr actor merge`)
     Merge(MergeArgs),
     /// Git integration for this clone
@@ -758,6 +760,50 @@ pub struct ActorRetireArgs {
     /// Preview without writing: report what would change, and change nothing
     #[arg(long)]
     pub dry_run: bool,
+}
+
+// ---------------------------------------------------------------------------
+// Themes
+// ---------------------------------------------------------------------------
+
+#[derive(Args)]
+pub struct ThemeCmd {
+    #[command(subcommand)]
+    pub action: Option<ThemeAction>,
+}
+
+#[derive(Subcommand)]
+pub enum ThemeAction {
+    /// List built-in and discovered themes
+    List,
+    /// Import a theme from a base16 JSON file
+    Import(ThemeImportArgs),
+}
+
+#[derive(Args)]
+pub struct ThemeImportArgs {
+    /// Source format
+    #[arg(value_enum)]
+    pub source: ThemeImportSource,
+    /// Path to the theme file to import
+    pub file: String,
+    /// Name to write the theme as (default: the scheme name from the source file)
+    #[arg(long)]
+    pub name: Option<String>,
+    /// Write to the global theme directory instead of the project
+    #[arg(long)]
+    pub global: bool,
+    /// Overwrite an existing theme file
+    #[arg(long)]
+    pub force: bool,
+    /// Preview without writing anything
+    #[arg(long)]
+    pub dry_run: bool,
+}
+
+#[derive(clap::ValueEnum, Clone, Debug)]
+pub enum ThemeImportSource {
+    Base16,
 }
 
 // ---------------------------------------------------------------------------
