@@ -842,13 +842,17 @@ fn render_separator(frame: &mut Frame, app: &App, area: Rect, sep_cols: &[usize]
     frame.render_widget(sep_widget, area);
 }
 
-/// Style for a tab: highlighted if current, normal otherwise
+/// Style for a tab: highlighted if current, normal otherwise.
+///
+/// The active tab gets a selection background, bright text, bold, and an
+/// underline so it stays recognizable even on terminals where the selection
+/// background is close to the page background.
 fn tab_style(app: &App, is_current: bool) -> Style {
     if is_current {
         Style::default()
             .fg(app.theme.text_bright)
             .bg(app.theme.selection_bg)
-            .add_modifier(Modifier::BOLD)
+            .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
     } else {
         Style::default().fg(app.theme.text).bg(app.theme.background)
     }
@@ -1182,6 +1186,50 @@ mod tests {
         assert_eq!(digit_count(10), 2);
         assert_eq!(digit_count(99), 2);
         assert_eq!(digit_count(100), 3);
+    }
+
+    /// The active track tab must be visually distinct: selection background,
+    /// bright text, bold, and underlined. Inactive tabs must not be.
+    #[test]
+    fn active_track_tab_is_bold_and_underlined() {
+        use crate::tui::render::test_helpers::*;
+        use ratatui::Terminal;
+        use ratatui::backend::TestBackend;
+
+        let mut app = app_with_track(SIMPLE_TRACK_MD);
+        let backend = TestBackend::new(80, 2);
+        let mut terminal = Terminal::new(backend).unwrap();
+        terminal
+            .draw(|frame| {
+                render_tab_bar(frame, &mut app, frame.area());
+            })
+            .unwrap();
+        let buf = terminal.backend().buffer().clone();
+
+        // " Test " is the active track tab at columns 3..8 (leading " ▶ " + space)
+        let active_cells: Vec<_> = buf.content[3..8]
+            .iter()
+            .map(|c| (c.symbol().to_string(), c.bg, c.modifier))
+            .collect();
+        assert_eq!(
+            active_cells[1].0, "T",
+            "active tab should show the track name"
+        );
+        for (_, bg, m) in &active_cells {
+            assert_eq!(*bg, app.theme.selection_bg, "active tab keeps selection bg");
+            assert!(
+                m.contains(Modifier::BOLD) && m.contains(Modifier::UNDERLINED),
+                "active tab must be bold and underlined, got {m:?}"
+            );
+        }
+
+        // Inactive special tabs keep the plain background and no modifier.
+        // The Tracks tab (▶) sits at column 11.
+        let inactive = &buf.content[11];
+        assert_eq!(inactive.symbol(), "\u{25B6}");
+        assert_eq!(inactive.bg, app.theme.background);
+        assert!(!inactive.modifier.contains(Modifier::BOLD));
+        assert!(!inactive.modifier.contains(Modifier::UNDERLINED));
     }
 
     mod snapshots {
