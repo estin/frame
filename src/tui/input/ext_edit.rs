@@ -88,6 +88,10 @@ pub(super) fn edit_in_external_editor(app: &mut App) {
         |run| with_terminal_suspended(run),
         fields::parse_template,
     );
+    // The terminal was suspended and restored for the editor. Its real screen
+    // may no longer match what ratatui has cached, so ask the event loop for a
+    // full redraw - regardless of how the session ended.
+    app.needs_full_redraw = true;
     let (parsed, tmp) = match edited {
         Ok(Edited::Saved(parsed, tmp)) => (parsed, tmp),
         Ok(Edited::Unchanged) => {
@@ -213,6 +217,38 @@ mod tests {
 
     fn task<'a>(app: &'a App, id: &str) -> Option<&'a crate::model::task::Task> {
         task_ops::find_task_in_track(App::find_track_in_project(&app.project, "a")?, id)
+    }
+
+    /// After an external editor session, the app must request a full redraw:
+    /// the terminal was suspended and restored, so the real screen may no
+    /// longer match what ratatui has cached. `true` as EDITOR exits 0 without
+    /// changing the file, which still counts as a session.
+    #[test]
+    fn external_editor_triggers_full_redraw() {
+        struct RestoreEditor;
+        impl Drop for RestoreEditor {
+            fn drop(&mut self) {
+                unsafe {
+                    std::env::remove_var("EDITOR");
+                    std::env::remove_var("VISUAL");
+                }
+            }
+        }
+
+        let tmp = tempfile::tempdir().unwrap();
+        let mut app = app_on_disk(tmp.path());
+        unsafe {
+            std::env::set_var("EDITOR", "true");
+            std::env::set_var("VISUAL", "true");
+        }
+        let _guard = RestoreEditor;
+
+        assert!(!app.needs_full_redraw);
+        edit_in_external_editor(&mut app);
+        assert!(
+            app.needs_full_redraw,
+            "an external editor session must request a full redraw"
+        );
     }
 
     #[test]

@@ -1340,6 +1340,10 @@ pub struct App {
     pub view: View,
     pub mode: Mode,
     pub should_quit: bool,
+    /// Set when the terminal was handed to an external process (an editor) and
+    /// the real screen may no longer match ratatui's cached buffer. The event
+    /// loop then clears the terminal so the next draw repaints every cell.
+    pub needs_full_redraw: bool,
     /// Set to true after a project switch so the event loop can reinitialize the file watcher
     pub watcher_needs_restart: bool,
     pub theme: Theme,
@@ -1636,6 +1640,7 @@ impl App {
             view: initial_view,
             mode: Mode::Navigate,
             should_quit: false,
+            needs_full_redraw: false,
             watcher_needs_restart: false,
             theme,
             actor_token,
@@ -5717,6 +5722,15 @@ fn run_event_loop(
         // successful: the common failure is another `fr` holding the lock, which
         // it releases as soon as its own write is done.
         app.retry_unsaved_saves(false);
+
+        // After handing the terminal to an external editor, the real screen can
+        // be out of sync with ratatui's cached buffer (editor artifacts,
+        // terminal-specific alternate-screen behavior). Clear so the draw below
+        // repaints every cell instead of diffing against stale state.
+        if app.needs_full_redraw {
+            terminal.clear()?;
+            app.needs_full_redraw = false;
+        }
 
         terminal.draw(|frame| render::render(frame, app))?;
 
